@@ -1,12 +1,16 @@
 import os
+import sys
 import time
 import pyautogui
-import sys
+import pyperclip
 
 os.system('start')
 
 time.sleep(.5)
 
-for i in range(1,sys.argv.__len__()) :
-	pyautogui.write(sys.argv[i])
+args = pyperclip.paste()
+
+for str in args.split('\n') :
+	pyperclip.copy(str)
+	pyautogui.hotkey('ctrl', 'v')
 	pyautogui.press('\n')

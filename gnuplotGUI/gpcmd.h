@@ -1,17 +1,18 @@
 ﻿#pragma once
 
-
+#include <stdio.h>
+#include <string>
 
 String cmdstr;
 
 void addCmdArg(String str) {
-	cmdstr += U"\"" + str + U"\" ";
+	cmdstr += str + U"\n";
 }
 
 void Plot() {
 
 
-	cmdstr = U"python cmdwriter.py gnuplot ";
+	cmdstr = U"gnuplot\n";
 
 	if (!gp::xrangeMin.text.empty()&& !gp::xrangeMax.text.empty())
 		addCmdArg(U"set xrange[" + gp::xrangeMin.text + U":" + gp::xrangeMax.text + U"]");
@@ -25,13 +26,10 @@ void Plot() {
 	addCmdArg(U"plot " + gp::function.text);
 
 
+	Clipboard::SetText(cmdstr);
 
-	system(cmdstr.toUTF8().c_str());
-	Console.open();
-	Console << cmdstr;
+	system("python cmdwriter.py");
 
-
-	//Console(str);
 
 
 }
