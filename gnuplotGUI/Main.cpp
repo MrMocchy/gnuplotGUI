@@ -1,61 +1,103 @@
 ﻿# include <Siv3D.hpp> // OpenSiv3D v0.6.5
+# include <Windows.h>
+# include <string.h>
+# include "Setting.h"
+# include "gpcmd.h"
+
+Line::value_type scroll = 0;
+Line::value_type yadd;
+
+Array<TextEditState*> textboxes;
+
+void drawText(String text, Line::value_type x) {
+	FontAsset(U"def")(text).draw(Arg::leftCenter = Vec2(x, yadd + scroll), gui::textColor);
+}
+void drawTextBox(TextEditState &text, Line::value_type x, double width, bool enabled = true) {
+	SimpleGUI::TextBoxAt(text, Vec2(x+width/2, yadd + scroll), width, unspecified, enabled);
+	textboxes.push_back(&text);
+}
 
 void Main()
 {
-	// 背景の色を設定 | Set background color
-	Scene::SetBackground(ColorF{ 0.8, 0.9, 1.0 });
 
-	// 通常のフォントを作成 | Create a new font
-	const Font font{ 60 };
+	Scene::SetBackground(Palette::White);
 
-	// 絵文字用フォントを作成 | Create a new emoji font
-	const Font emojiFont{ 60, Typeface::ColorEmoji };
+	FontAsset::Register(U"def", 30);
 
-	// `font` が絵文字用フォントも使えるようにする | Set emojiFont as a fallback
-	font.addFallback(emojiFont);
+	const Font font{ 30 };
 
-	// 画像ファイルからテクスチャを作成 | Create a texture from an image file
-	const Texture texture{ U"example/windmill.png" };
+	gui::Init();
+	gp::Init();
 
-	// 絵文字からテクスチャを作成 | Create a texture from an emoji
-	const Texture emoji{ U"🐈"_emoji };
-
-	// 絵文字を描画する座標 | Coordinates of the emoji
-	Vec2 emojiPos{ 300, 150 };
-
-	// テキストを画面にデバッグ出力 | Print a text
-	Print << U"Push [A] key";
 
 	while (System::Update())
 	{
-		// テクスチャを描く | Draw a texture
-		texture.draw(200, 200);
 
-		// テキストを画面の中心に描く | Put a text in the middle of the screen
-		font(U"Hello, Siv3D!🚀").drawAt(Scene::Center(), Palette::Black);
 
-		// サイズをアニメーションさせて絵文字を描く | Draw a texture with animated size
-		emoji.resized(100 + Periodic::Sine0_1(1s) * 20).drawAt(emojiPos);
+		//スクロール部分
+		yadd = 70;
+		scroll -= Mouse::Wheel()*20;
 
-		// マウスカーソルに追随する半透明な円を描く | Draw a red transparent circle that follows the mouse cursor
-		Circle{ Cursor::Pos(), 40 }.draw(ColorF{ 1, 0, 0, 0.5 });
+		//function
+		drawText(U"function", 50);
+		drawTextBox(gp::function, 200, 500);
 
-		// もし [A] キーが押されたら | When [A] key is down
-		if (KeyA.down())
-		{
-			// 選択肢からランダムに選ばれたメッセージをデバッグ表示 | Print a randomly selected text
-			Print << Sample({ U"Hello!", U"こんにちは", U"你好", U"안녕하세요?" });
+		//range
+		yadd += 50;
+		drawText(U"range", 50);
+		drawText(U"x[", 170);
+		drawTextBox(gp::xrangeMin, 200, 100);
+		drawText(U":", 305);
+		drawTextBox(gp::xrangeMax, 320, 100);
+		drawText(U"]    y[", 420);
+		drawTextBox(gp::yrangeMin, 500, 100);
+		drawText(U":", 605);
+		drawTextBox(gp::yrangeMax, 620, 100);
+		drawText(U"]", 720);
+
+		//label
+		yadd += 50;
+		drawText(U"label", 50);
+		drawText(U"x", 180);
+		drawTextBox(gp::xlabel, 200, 250);
+		drawText(U"y", 480);
+		drawTextBox(gp::ylabel, 500, 250);
+
+
+
+		//上部リボン
+
+		Rect(0, 0, 800, 50).draw(gui::backgroundColor);
+		Line(0, 50, 800, 50).draw(1,gui::textColor);
+
+		font(U"gnuplot GUI").draw(50,0, gui::textColor);
+
+		if (SimpleGUI::ButtonAt(U"plot", Vec2(750,25))) {
+			Plot();
 		}
 
-		// もし [Button] が押されたら | When [Button] is pushed
-		if (SimpleGUI::Button(U"Button", Vec2{ 640, 40 }))
-		{
-			// 画面内のランダムな場所に座標を移動
-			// Move the coordinates to a random position in the screen
-			emojiPos = RandomVec2(Scene::Rect());
+		//グリッド
+		if (true) {
+			for (int x = 100; x < 800; x += 100) {
+				Line(x, 0, x, 600).draw(1, ColorF(0, 0, 0, 0.5));
+			}
+			for (int y = 100; y < 600; y += 100) {
+				Line(0, y, 800, y).draw(1, ColorF(0, 0, 0, 0.5));
+			}
 		}
+
+
+		for (size_t i : step(textboxes.size()-1)) {
+			if (textboxes[i]->tabKey) {
+				textboxes[i]->active = false;
+				textboxes[i+1]->active = true;
+			}
+		}
+		textboxes.clear();
+
 	}
 }
+
 
 //
 // - Debug ビルド: プログラムの最適化を減らす代わりに、エラーやクラッシュ時に詳細な情報を得られます。

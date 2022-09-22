@@ -313,6 +313,8 @@
     <Xml Include="App\example\xml\test.xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gpcmd.h" />
+    <ClInclude Include="Setting.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
